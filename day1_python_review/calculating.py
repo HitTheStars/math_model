@@ -7,4 +7,6 @@ with open('G:\my_lovely_codes\math_model\iris\Iris.csv', 'w', newline='') as iri
     writer.writerow(['sepal_length', 'sepal_width', 'petal_length', 'petal_width', 'species'])
 
 print("Iris dataset downloaded successfully.")
-print("Dataset location:", iris)
+print("Dataset location:", iris_file.name)
+
+
