@@ -42,4 +42,4 @@ iface = gr.Interface(
     description="可上传图片或使用摄像头进行人脸检测"
 )
 
-iface.launch(debug=True)
+iface.launch(share=True, debug=True)
