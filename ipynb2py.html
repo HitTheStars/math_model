@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>ipynb → py 在线转换器</title>
+<style>
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;background:#f6f8fa;margin:0;padding:2rem;display:flex;flex-direction:column;align-items:center}
+  h1{color:#0366d6;margin-bottom:1rem}
+  #dropZone{border:2px dashed #0366d6;border-radius:6px;padding:2rem 4rem;text-align:center;color:#586069;cursor:pointer;transition:background .2s}
+  #dropZone.dragover{background:#dbeafe}
+  textarea{width:100%;max-width:800px;height:50vh;font-family:Consolas,Monaco,"Courier New",monospace;font-size:14px;border:1px solid #d0d7de;border-radius:6px;padding:.5rem;resize:vertical;margin-top:1rem}
+  button{margin-top:1rem;padding:.5rem 1.2rem;font-size:1rem;color:#fff;background:#0366d6;border:none;border-radius:6px;cursor:pointer}
+  button:disabled{background:#8b949e;cursor:not-allowed}
+</style>
+</head>
+<body>
+  <h1>Jupyter Notebook 转 Python 脚本</h1>
+
+  <div id="dropZone">
+    拖拽 .ipynb 文件到此处，或点击选择文件
+    <input type="file" id="fileInput" accept=".ipynb" hidden>
+  </div>
+
+  <textarea id="outputCode" placeholder="转换后的 .py 代码将出现在这里..." readonly></textarea>
+  <button id="downloadBtn" disabled>下载 .py 文件</button>
+
+<script>
+/* 轻量级 ipynb → py 转换函数 */
+function nb2py(nb){
+  let py = [];
+  nb.cells.forEach(cell => {
+    if (cell.cell_type === 'code') {
+      // 去掉末尾空行再拼回去，避免多余空行
+      const src = cell.source.join('').replace(/\n+$/, '');
+      if (src) py.push(src);
+    }
+  });
+  return py.join('\n\n');
+}
+
+/* 读取文件并转换 */
+function handleFile(file){
+  if (!file.name.endsWith('.ipynb')) {
+    alert('请选择 .ipynb 文件');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const nb = JSON.parse(e.target.result);
+      const code = nb2py(nb);
+      document.getElementById('outputCode').value = code;
+      document.getElementById('downloadBtn').disabled = !code;
+      document.getElementById('downloadBtn').onclick = () => {
+        const blob = new Blob([code], {type:'text/plain'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = file.name.replace(/\.ipynb$/, '.py');
+        a.click();
+      };
+    } catch(err) {
+      alert('解析失败：' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* 绑定拖拽 + 点击上传 */
+const dz = document.getElementById('dropZone');
+const fi = document.getElementById('fileInput');
+
+dz.addEventListener('click', () => fi.click());
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+dz.addEventListener('drop', e => {
+  e.preventDefault();
+  dz.classList.remove('dragover');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fi.addEventListener('change', () => {
+  if (fi.files.length) handleFile(fi.files[0]);
+});
+</script>
+</body>
+</html>
